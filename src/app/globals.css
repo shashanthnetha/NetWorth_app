@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+/* ============================================================
+   NETWORTH — Design System
+   ============================================================ */
+
+/* --- Root Variables --- */
+:root {
+  /* Core Colors */
+  --nw-bg-primary: #0D0D0D;
+  --nw-bg-secondary: #111827;
+  --nw-bg-card: rgba(255, 255, 255, 0.04);
+  --nw-bg-card-hover: rgba(255, 255, 255, 0.08);
+
+  /* Accent Colors */
+  --nw-green: #00FFB2;
+  --nw-green-dim: rgba(0, 255, 178, 0.15);
+  --nw-blue: #3B82F6;
+  --nw-blue-dim: rgba(59, 130, 246, 0.15);
+  --nw-gold: #FFD700;
+  --nw-gold-dim: rgba(255, 215, 0, 0.15);
+  --nw-cyan: #22D3EE;
+  --nw-cyan-dim: rgba(34, 211, 238, 0.1);
+  --nw-purple: #8B5CF6;
+  --nw-purple-dim: rgba(139, 92, 246, 0.15);
+
+  /* Status Colors */
+  --nw-red: #EF4444;
+  --nw-red-dim: rgba(239, 68, 68, 0.15);
+  --nw-orange: #F97316;
+
+  /* Text */
+  --nw-text-primary: #F9FAFB;
+  --nw-text-secondary: #9CA3AF;
+  --nw-text-dim: #6B7280;
+
+  /* Borders */
+  --nw-border: rgba(255, 255, 255, 0.08);
+  --nw-border-hover: rgba(255, 255, 255, 0.15);
+
+  /* Glass */
+  --nw-glass-bg: rgba(255, 255, 255, 0.04);
+  --nw-glass-blur: 20px;
+
+  /* Fonts */
+  --font-heading: 'Syne', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Spacing */
+  --nw-nav-height: 72px;
+
+  color-scheme: dark;
+}
+
+/* --- Base Styles --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-body);
+  background-color: var(--nw-bg-primary);
+  color: var(--nw-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--nw-bg-primary);
+  overflow-x: hidden;
+}
+
+/* Subtle background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 178, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-body); }
+.font-mono { font-family: var(--font-mono); }
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Glassmorphism --- */
+.glass {
+  background: var(--nw-glass-bg);
+  backdrop-filter: blur(var(--nw-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nw-glass-blur));
+  border: 1px solid var(--nw-border);
+  border-radius: 16px;
+}
+
+.glass-card {
+  background: var(--nw-glass-bg);
+  backdrop-filter: blur(var(--nw-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nw-glass-blur));
+  border: 1px solid var(--nw-border);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: var(--nw-bg-card-hover);
+  border-color: var(--nw-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Glow Effects --- */
+.glow-green {
+  box-shadow: 0 0 20px rgba(0, 255, 178, 0.15), 0 0 60px rgba(0, 255, 178, 0.05);
+}
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 0 60px rgba(59, 130, 246, 0.05);
+}
+.glow-gold {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.15), 0 0 60px rgba(255, 215, 0, 0.05);
+}
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15), 0 0 60px rgba(239, 68, 68, 0.05);
+}
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05);
+}
+
+/* Neon Text */
+.neon-green { color: var(--nw-green); text-shadow: 0 0 10px rgba(0, 255, 178, 0.5); }
+.neon-red { color: var(--nw-red); text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+.neon-blue { color: var(--nw-blue); text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+.neon-gold { color: var(--nw-gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+/* --- Animations --- */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes count-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes confetti-pop {
+  0% { transform: scale(0); opacity: 1; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float-up { animation: float-up 1.5s ease-out forwards; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-slide-up { animation: slide-up 0.4s ease-out forwards; }
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Money Colors --- */
+.money-positive { color: #10B981; }
+.money-negative { color: #EF4444; }
+.money-neutral { color: #9CA3AF; }
+
+/* --- Page Container --- */
+.page-container {
+  padding: 16px;
+  padding-bottom: calc(var(--nw-nav-height) + 24px);
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Screen Transitions --- */
+.screen-enter {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* --- Button Base --- */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-base:active {
+  transform: scale(0.97);
+}
+
+.btn-base:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
