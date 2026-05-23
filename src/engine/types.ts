@@ -698,6 +698,11 @@ export interface GameMeta {
   gameSpeed: number;
   soundEnabled: boolean;
   reducedMotion: boolean;
+  // Timeline Upgrade
+  currentDay: number;
+  isPaused: boolean;
+  speedBoostRemainingDays: number;
+  infiniteModeActive: boolean;
 }
 
 // --- Complete Game State ---

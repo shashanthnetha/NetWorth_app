@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useGameStore } from '../engine/gameStore';
 import BottomNav from '../components/layout/BottomNav';
 import MonthSummary from '../components/layout/MonthSummary';
@@ -26,6 +27,27 @@ const screens = {
 export default function GameApp() {
   const currentScreen = useGameStore((s) => s.ui.currentScreen);
   const gameStarted = useGameStore((s) => s.meta.gameStarted);
+  
+  const isPaused = useGameStore((s) => s.meta.isPaused);
+  const gameSpeed = useGameStore((s) => s.meta.gameSpeed);
+  const tickDaily = useGameStore((s) => s.tickDaily);
+  const showMonthSummary = useGameStore((s) => s.ui.showMonthSummary);
+  const showEventModal = useGameStore((s) => s.ui.showEventModal);
+  const showNewGameModal = useGameStore((s) => s.ui.showNewGameModal);
+
+  // Auto-advancing timeline ticker loop
+  useEffect(() => {
+    if (!gameStarted || isPaused || showMonthSummary || showEventModal || showNewGameModal) {
+      return;
+    }
+
+    const tickInterval = Math.max(80, Math.min(2000, 1000 / gameSpeed));
+    const timer = setInterval(() => {
+      tickDaily();
+    }, tickInterval);
+
+    return () => clearInterval(timer);
+  }, [gameStarted, isPaused, gameSpeed, tickDaily, showMonthSummary, showEventModal, showNewGameModal]);
 
   const ScreenComponent = screens[currentScreen] || DashboardScreen;
 

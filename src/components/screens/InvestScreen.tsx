@@ -107,7 +107,7 @@ export default function InvestScreen() {
   return (
     <motion.div className="page-container pb-24" variants={stagger} initial="hidden" animate="show">
       <motion.div variants={fadeUp} className="mb-4">
-        <h1 className="font-heading text-xl font-bold">Investments</h1>
+        <h1 className="font-heading text-2xl font-extrabold text-gray-100">Investments</h1>
         <p className="text-xs text-gray-500">Deploy capital and secure your financial future</p>
       </motion.div>
 
@@ -142,7 +142,7 @@ export default function InvestScreen() {
       </motion.div>
 
       {/* Horizontal Scroll Tab Selector */}
-      <motion.div variants={fadeUp} className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 mb-4">
+      <motion.div variants={fadeUp} className="flex gap-2 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 mb-4">
         {(['stocks', 'crypto', 'mutual_funds', 'commodities', 'forex'] as const).map((t) => (
           <button
             key={t}
@@ -153,7 +153,7 @@ export default function InvestScreen() {
               setSelectedComm(null);
               setSelectedPair(null);
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
               tab === t
                 ? t === 'stocks'
                   ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]'

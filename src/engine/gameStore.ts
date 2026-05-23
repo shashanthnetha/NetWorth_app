@@ -38,6 +38,7 @@ import {
   calculateDividends,
   calculatePortfolioValue,
   determineMarketTrend,
+  updateMarketDaily,
 } from './marketEngine';
 import { generateMonthlyEvents, applyEventEffects } from './eventSystem';
 import { JOBS, EDUCATION_COURSES, BUSINESS_TEMPLATES, PROPERTY_TEMPLATES, ACHIEVEMENTS, LIFESTYLE_CHOICES } from './gameData';
@@ -73,6 +74,10 @@ function createInitialState(): GameState {
       gameSpeed: 1,
       soundEnabled: true,
       reducedMotion: false,
+      currentDay: 1,
+      isPaused: true,
+      speedBoostRemainingDays: 0,
+      infiniteModeActive: false,
     },
     player: {
       name: '',
@@ -270,6 +275,14 @@ interface GameActions {
   // Forex
   openForexPosition: (pairId: ForexPair, type: 'long' | 'short', lotSize: number, leverage: number, stopLoss?: number, takeProfit?: number) => boolean;
   closeForexPosition: (positionId: string) => boolean;
+
+  // Timeline Upgrade Actions
+  togglePause: () => void;
+  setGameSpeed: (speed: number) => void;
+  tickDaily: () => void;
+  skipTime: (months: number) => boolean;
+  buySpeedBoost: (boostType: '3x_1mo' | '5x_3mo') => boolean;
+  keepPlayingInfinite: () => void;
 }
 
 // Type for the combined store
@@ -342,7 +355,10 @@ export const useGameStore = create<GameStore>()(
       advanceMonth: () => {
         const state = get();
         if (state.ui.isAdvancingMonth) return;
-        if (state.meta.currentMonth >= state.meta.totalMonths) return;
+        if (!state.meta.infiniteModeActive && state.meta.totalMonths > 0 && state.meta.currentMonth >= state.meta.totalMonths) {
+          set((s) => ({ meta: { ...s.meta, isPaused: true } }));
+          return;
+        }
 
         set({ ui: { ...state.ui, isAdvancingMonth: true } });
 
@@ -1243,6 +1259,7 @@ export const useGameStore = create<GameStore>()(
             ...state.meta,
             currentMonth: state.meta.currentMonth + 1,
             lastPlayedTimestamp: Date.now(),
+            isPaused: true, // Auto-pause on monthly statement!
           },
           player: {
             ...state.player,
@@ -1299,6 +1316,281 @@ export const useGameStore = create<GameStore>()(
             isAdvancingMonth: false,
           },
         });
+      },
+
+      togglePause: () => {
+        set((state) => ({
+          meta: { ...state.meta, isPaused: !state.meta.isPaused }
+        }));
+      },
+
+      setGameSpeed: (speed) => {
+        set((state) => ({
+          meta: { ...state.meta, gameSpeed: speed, isPaused: speed === 0 }
+        }));
+      },
+
+      keepPlayingInfinite: () => {
+        set((state) => ({
+          meta: {
+            ...state.meta,
+            infiniteModeActive: true,
+            totalMonths: 0
+          }
+        }));
+        get().addToast({
+          type: 'success',
+          title: 'Infinite Mode Active 🚀',
+          message: 'Retirement declined. Build your empire indefinitely!'
+        });
+      },
+
+      tickDaily: () => {
+        const state = get();
+        if (state.meta.isPaused) return;
+
+        if (state.ui.showMonthSummary || state.ui.showEventModal || state.ui.showNewGameModal) {
+          set((s) => ({ meta: { ...s.meta, isPaused: true } }));
+          return;
+        }
+
+        let newDay = state.meta.currentDay + 1;
+        let speedBoostDays = state.meta.speedBoostRemainingDays;
+        let currentSpeed = state.meta.gameSpeed;
+        const newToasts: ToastNotification[] = [];
+
+        if (speedBoostDays > 0) {
+          speedBoostDays -= 1;
+          if (speedBoostDays === 0) {
+            currentSpeed = 1;
+            newToasts.push({
+              id: generateId(),
+              type: 'info',
+              title: 'Speed Boost Ended',
+              message: 'Your time speed boost has expired. Speed returned to 1x.',
+            });
+          }
+        }
+
+        if (newDay > 30) {
+          set((s) => ({
+            meta: {
+              ...s.meta,
+              currentDay: 1,
+              speedBoostRemainingDays: speedBoostDays,
+              gameSpeed: currentSpeed,
+            },
+            toasts: [...s.toasts, ...newToasts],
+          }));
+
+          get().advanceMonth();
+          return;
+        }
+
+        const seasonalMods = calculateSeasonalMultipliers(state.meta.currentMonth + 1);
+        const eventStockMultiplier = state.pendingEvent ? 1.0 : 1.0;
+
+        const sectorMultipliers: Record<string, number> = {};
+
+        const { companies: newCompanies, cryptoAssets: newCrypto, commodities: updatedCommodities, forexPairs: updatedForexPairs } = updateMarketDaily(
+          state.market.companies,
+          state.market.cryptoAssets,
+          state.market.commodities,
+          state.market.forexPairs,
+          state.market.volatilityIndex,
+          eventStockMultiplier * seasonalMods.stockMarket,
+          sectorMultipliers,
+          state.market.marketTrend
+        );
+
+        let forexCashAdjustments = 0;
+        const remainingPositions: ForexPosition[] = [];
+
+        for (const pos of state.market.forexPositions) {
+          const pair = updatedForexPairs.find((p) => p.id === pos.pairId);
+          if (!pair) {
+            remainingPositions.push(pos);
+            continue;
+          }
+
+          const currentRate = pair.currentRate;
+          const profitLoss = calculateForexPnL({
+            type: pos.type,
+            entryRate: pos.entryRate,
+            currentRate,
+            lotSize: pos.lotSize,
+            leverage: pos.leverage,
+          });
+
+          let triggerClose = false;
+          let closeReason = '';
+          let finalProceeds = pos.margin + profitLoss;
+
+          if (profitLoss <= -pos.margin) {
+            triggerClose = true;
+            closeReason = 'Margin Liquidation 🚨';
+            finalProceeds = 0;
+          } else if (pos.stopLoss && (
+            (pos.type === 'long' && currentRate <= pos.stopLoss) ||
+            (pos.type === 'short' && currentRate >= pos.stopLoss)
+          )) {
+            triggerClose = true;
+            closeReason = 'Stop Loss Hit 🛑';
+          } else if (pos.takeProfit && (
+            (pos.type === 'long' && currentRate >= pos.takeProfit) ||
+            (pos.type === 'short' && currentRate <= pos.takeProfit)
+          )) {
+            triggerClose = true;
+            closeReason = 'Take Profit Hit 🎯';
+          }
+
+          if (triggerClose) {
+            forexCashAdjustments += finalProceeds;
+            newToasts.push({
+              id: generateId(),
+              type: profitLoss >= 0 ? 'success' : 'error',
+              title: closeReason,
+              message: `Forex position ${pos.type.toUpperCase()} ${pos.pairId} closed automatically. P&L: ₹${profitLoss.toLocaleString()}`,
+            });
+          } else {
+            remainingPositions.push({
+              ...pos,
+              currentRate,
+              profitLoss,
+            });
+          }
+        }
+
+        const currentPortfolioValue = calculatePortfolioValue({
+          ...state,
+          market: {
+            ...state.market,
+            companies: newCompanies,
+            cryptoAssets: newCrypto,
+            commodities: updatedCommodities,
+            forexPairs: updatedForexPairs,
+            forexPositions: remainingPositions,
+          },
+        });
+
+        const propertyValue = state.properties
+          .filter((p) => p.currentValue > 0)
+          .reduce((sum, p) => sum + p.currentValue, 0);
+
+        const businessEquity = state.businesses.reduce((sum, b) => {
+          const template = BUSINESS_TEMPLATES.find((t) => t.id === b.templateId);
+          const annualProfit = (b.monthlyRevenue - b.monthlyExpenses) * 12;
+          return sum + Math.max(template?.startupCost || 0, annualProfit * 5);
+        }, 0);
+
+        const startupValue = state.startup ? Math.round(state.startup.valuation * (state.startup.equity / 100)) : 0;
+        const taxSavingAssets = state.taxPlanning.ppfBalance + state.taxPlanning.npsBalance;
+        const creditCardUsed = state.player.creditCards.reduce((sum, c) => sum + c.used, 0);
+        const loansTotal = state.loans.reduce((sum, l) => sum + l.remainingAmount, 0);
+
+        const dailyNetWorth = state.player.cash + forexCashAdjustments + currentPortfolioValue + propertyValue + businessEquity + startupValue + taxSavingAssets - loansTotal - creditCardUsed;
+
+        set((s) => ({
+          meta: {
+            ...s.meta,
+            currentDay: newDay,
+            speedBoostRemainingDays: speedBoostDays,
+            gameSpeed: currentSpeed,
+          },
+          player: {
+            ...s.player,
+            cash: Math.max(0, s.player.cash + forexCashAdjustments),
+            netWorth: dailyNetWorth,
+          },
+          market: {
+            ...s.market,
+            companies: newCompanies,
+            cryptoAssets: newCrypto,
+            commodities: updatedCommodities,
+            forexPairs: updatedForexPairs,
+            forexPositions: remainingPositions,
+          },
+          toasts: [...s.toasts, ...newToasts],
+        }));
+      },
+
+      skipTime: (months) => {
+        const state = get();
+        const costMap: Record<number, number> = { 1: 15, 3: 40, 12: 150 };
+        const cost = costMap[months] || 999;
+
+        if (state.player.wealthTokens < cost) {
+          get().addToast({
+            type: 'error',
+            title: 'Not Enough Stars',
+            message: `Requires ${cost} Stars. You have ${state.player.wealthTokens}.`
+          });
+          return false;
+        }
+
+        set((s) => ({
+          player: {
+            ...s.player,
+            wealthTokens: s.player.wealthTokens - cost
+          },
+          meta: {
+            ...s.meta,
+            isPaused: true
+          }
+        }));
+
+        get().addToast({
+          type: 'success',
+          title: 'Time Warp Engaged! ⚡',
+          message: `Skipping ahead ${months} Month(s)...`,
+        });
+
+        for (let i = 0; i < months; i++) {
+          const isLast = i === months - 1;
+          get().advanceMonth();
+          if (!isLast) {
+            set((s) => ({ ui: { ...s.ui, showMonthSummary: false } }));
+          }
+        }
+
+        return true;
+      },
+
+      buySpeedBoost: (boostType) => {
+        const state = get();
+        const starCost = boostType === '3x_1mo' ? 5 : 12;
+        const durationDays = boostType === '3x_1mo' ? 30 : 90;
+        const targetSpeed = boostType === '3x_1mo' ? 3 : 5;
+
+        if (state.player.wealthTokens < starCost) {
+          get().addToast({
+            type: 'error',
+            title: 'Not Enough Stars',
+            message: `Requires ${starCost} Stars to activate.`
+          });
+          return false;
+        }
+
+        set((s) => ({
+          player: {
+            ...s.player,
+            wealthTokens: s.player.wealthTokens - starCost
+          },
+          meta: {
+            ...s.meta,
+            gameSpeed: targetSpeed,
+            speedBoostRemainingDays: durationDays,
+            isPaused: false
+          }
+        }));
+
+        get().addToast({
+          type: 'success',
+          title: 'Speed Boost Activated! 🚀',
+          message: `${targetSpeed}x Speed active for the next ${durationDays} days!`
+        });
+
+        return true;
       },
 
       // ========================

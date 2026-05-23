@@ -104,7 +104,7 @@ export default function ProfileScreen() {
             <button
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
-              className={`pb-2 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${
+              className={`pb-2.5 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'border-emerald-400 text-emerald-400 font-bold'
                   : 'border-transparent text-gray-400 hover:text-gray-200'

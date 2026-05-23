@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -13,6 +14,9 @@ import {
   Star,
   ChevronRight,
   Play,
+  Pause,
+  Rocket,
+  Clock,
   Calendar,
   Volume2,
   VolumeX,
@@ -58,6 +62,15 @@ export default function DashboardScreen() {
   
   const soundEnabled = useGameStore((s) => s.meta.soundEnabled);
   const toggleSound = useGameStore((s) => s.toggleSound);
+
+  const togglePause = useGameStore((s) => s.togglePause);
+  const setGameSpeed = useGameStore((s) => s.setGameSpeed);
+  const isPaused = useGameStore((s) => s.meta.isPaused);
+  const skipTime = useGameStore((s) => s.skipTime);
+  const buySpeedBoost = useGameStore((s) => s.buySpeedBoost);
+  const keepPlayingInfinite = useGameStore((s) => s.keepPlayingInfinite);
+
+  const [showTimeWarpModal, setShowTimeWarpModal] = useState(false);
 
   const previousNetWorth = player.netWorthHistory.length > 1
     ? player.netWorthHistory[player.netWorthHistory.length - 2]
@@ -129,6 +142,86 @@ export default function DashboardScreen() {
             <span className="text-xs font-mono font-bold text-yellow-300">{player.wealthTokens}</span>
           </div>
         </div>
+      </motion.div>
+
+      {/* Time Control Card */}
+      <motion.div variants={fadeUp} className="mb-4">
+        <GlassCard padding="md" glowColor={isPaused ? "gold" : "green"} hover={false} className="border border-white/[0.08]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center relative">
+                <Calendar className="w-5.5 h-5.5 text-emerald-400" />
+                {!isPaused && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase font-mono tracking-wider">
+                    TIMELINE PROGRESSION
+                  </p>
+                  {meta.infiniteModeActive && (
+                    <span className="text-[8px] px-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded uppercase font-semibold">
+                      Infinite
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-base font-bold text-gray-200 font-heading">
+                  Month {meta.currentMonth}, Day {meta.currentDay}
+                </h3>
+                <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                  {meta.speedBoostRemainingDays > 0 
+                    ? `🚀 Speed Boost: ${meta.gameSpeed}x (${meta.speedBoostRemainingDays} days left)` 
+                    : `Current Speed: ${meta.gameSpeed}x`}
+                </p>
+              </div>
+            </div>
+
+            {/* Play/Pause & Speed Buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={togglePause}
+                className={`p-2.5 rounded-xl border transition-all active:scale-95 ${
+                  isPaused 
+                    ? 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/25 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
+                    : 'bg-white/[0.03] border-white/[0.06] text-gray-400 hover:text-gray-200 hover:bg-white/[0.06]'
+                }`}
+              >
+                {isPaused ? <Play className="w-4.5 h-4.5 fill-yellow-400/10" /> : <Pause className="w-4.5 h-4.5" />}
+              </button>
+
+              <button
+                onClick={() => setGameSpeed(1)}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all active:scale-95 ${
+                  meta.gameSpeed === 1 && !isPaused
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]'
+                    : 'bg-white/[0.03] border-white/[0.06] text-gray-500 hover:text-gray-300 hover:bg-white/[0.06]'
+                }`}
+              >
+                1x
+              </button>
+
+              <button
+                onClick={() => setGameSpeed(2)}
+                className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all active:scale-95 ${
+                  meta.gameSpeed === 2 && !isPaused
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]'
+                    : 'bg-white/[0.03] border-white/[0.06] text-gray-500 hover:text-gray-300 hover:bg-white/[0.06]'
+                }`}
+              >
+                2x
+              </button>
+
+              <button
+                onClick={() => setShowTimeWarpModal(true)}
+                className="p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all active:scale-95 flex items-center justify-center animate-pulse"
+                title="Time Warp & Speed Boosts"
+              >
+                <Rocket className="w-4.5 h-4.5" />
+              </button>
+            </div>
+          </div>
+        </GlassCard>
       </motion.div>
 
       {/* News Ticker Tape */}
@@ -491,29 +584,159 @@ export default function DashboardScreen() {
       <motion.div variants={fadeUp} className="mb-6">
         <ProgressBar
           value={meta.currentMonth}
-          max={meta.totalMonths}
+          max={meta.infiniteModeActive ? 0 : meta.totalMonths}
           label="Journey Progress"
-          sublabel={`${meta.currentMonth}/${meta.totalMonths} months`}
-          showPercent
+          sublabel={meta.infiniteModeActive ? `Month ${meta.currentMonth} (Infinite Mode 🚀)` : `${meta.currentMonth}/${meta.totalMonths} months`}
+          showPercent={!meta.infiniteModeActive}
           color="cyan"
           size="sm"
         />
       </motion.div>
 
-      {/* Advance Month Button */}
-      <motion.div variants={fadeUp} className="mb-4">
-        <GlowButton
-          variant="primary"
-          size="xl"
-          fullWidth
-          onClick={advanceMonth}
-          disabled={isAdvancing || meta.currentMonth >= meta.totalMonths}
-          icon={<Play className="w-5 h-5" />}
-          className="!py-5"
-        >
-          {isAdvancing ? 'Processing...' : meta.currentMonth >= meta.totalMonths ? 'Game Complete!' : 'Advance Month'}
-        </GlowButton>
-      </motion.div>
+      {/* Timeline Control Status or Retirement Actions */}
+      {meta.totalMonths > 0 && meta.currentMonth >= meta.totalMonths && !meta.infiniteModeActive ? (
+        <motion.div variants={fadeUp} className="mb-4">
+          <GlassCard padding="lg" glowColor="gold" hover={false} className="border border-yellow-500/20 bg-yellow-500/5">
+            <h3 className="text-sm font-bold text-yellow-300 uppercase font-heading flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-yellow-400 animate-spin" /> Retirement Target Reached!
+            </h3>
+            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+              Congratulations! You have completed the 30-year target path with a final Net Worth of <strong className="text-gray-200">{formatCurrency(player.netWorth)}</strong>. What is your next move, tycoon?
+            </p>
+            <div className="flex flex-col gap-2 mt-4">
+              <GlowButton
+                variant="primary"
+                fullWidth
+                onClick={keepPlayingInfinite}
+                className="!py-3"
+              >
+                Keep Playing (Infinite Mode) 🚀
+              </GlowButton>
+              <GlowButton
+                variant="ghost"
+                fullWidth
+                onClick={() => useGameStore.getState().resetGame()}
+                className="!py-3 border border-white/10"
+              >
+                Retire & Start Fresh
+              </GlowButton>
+            </div>
+          </GlassCard>
+        </motion.div>
+      ) : (
+        <motion.div variants={fadeUp} className="mb-4">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs text-gray-400">
+                {isPaused ? 'Timeline is Paused' : `Speed: ${meta.gameSpeed}x • Days ticking...`}
+              </span>
+            </div>
+            <button
+              onClick={togglePause}
+              className="text-xs text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+            >
+              {isPaused ? 'Resume Timeline' : 'Pause'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Time Warp / Stars Shop Modal */}
+      {showTimeWarpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0E0E10] p-5 shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-3 right-3">
+              <button 
+                onClick={() => setShowTimeWarpModal(false)}
+                className="w-7 h-7 rounded-lg bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:text-gray-200 flex items-center justify-center text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Rocket className="w-5 h-5 text-purple-400" />
+              <h3 className="text-base font-bold text-gray-200 font-heading">Time Warp & Speed Boosts</h3>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-4">
+              <div className="flex items-center gap-1.5">
+                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400/20" />
+                <span className="text-xs font-semibold text-yellow-300">Your Wealth Tokens</span>
+              </div>
+              <span className="text-sm font-bold text-yellow-300 font-mono">{player.wealthTokens} Stars</span>
+            </div>
+
+            {/* Time Skips Section */}
+            <div className="mb-4">
+              <h4 className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-mono">
+                Instant Time Skips (Fast Forward)
+              </h4>
+              <div className="space-y-2">
+                {[
+                  { label: 'Skip 1 Month', duration: 1, cost: 15 },
+                  { label: 'Skip 3 Months', duration: 3, cost: 40 },
+                  { label: 'Skip 1 Year', duration: 12, cost: 150 },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      const success = skipTime(item.duration);
+                      if (success) setShowTimeWarpModal(false);
+                    }}
+                    disabled={player.wealthTokens < item.cost}
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-40 disabled:hover:bg-transparent transition-all text-left cursor-pointer"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-gray-300">{item.label}</p>
+                      <p className="text-[10px] text-gray-500">Auto-process EMIs, salary, & market ticks</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-yellow-400 bg-yellow-500/15 px-2 py-0.5 rounded border border-yellow-500/20 shrink-0">
+                      {item.cost} Stars
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Speed Boosts Section */}
+            <div>
+              <h4 className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 font-mono">
+                Daily Timeline Speed Boosts
+              </h4>
+              <div className="space-y-2">
+                {[
+                  { label: '3x Speed Boost (30 Days)', key: '3x_1mo' as const, cost: 5, desc: 'Flow day-by-day 3x faster' },
+                  { label: '5x Speed Boost (90 Days)', key: '5x_3mo' as const, cost: 12, desc: 'Maximum time progression rate' },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      const success = buySpeedBoost(item.key);
+                      if (success) setShowTimeWarpModal(false);
+                    }}
+                    disabled={player.wealthTokens < item.cost}
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-40 disabled:hover:bg-transparent transition-all text-left cursor-pointer"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-gray-300">{item.label}</p>
+                      <p className="text-[10px] text-gray-500">{item.desc}</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-yellow-400 bg-yellow-500/15 px-2 py-0.5 rounded border border-yellow-500/20 shrink-0">
+                      {item.cost} Stars
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }

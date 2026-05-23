@@ -103,7 +103,7 @@ export default function CareerScreen() {
   return (
     <motion.div className="page-container" variants={stagger} initial="hidden" animate="show">
       <motion.div variants={fadeUp} className="mb-4">
-        <h1 className="font-heading text-xl font-bold">Career & Connection</h1>
+        <h1 className="font-heading text-2xl font-extrabold text-gray-100">Career & Connection</h1>
         <p className="text-xs text-gray-500">Build your skills, run side gigs, and network with elites</p>
       </motion.div>
 
@@ -189,7 +189,7 @@ export default function CareerScreen() {
       </motion.div>
 
       {/* Tab Switcher */}
-      <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1 mb-4 bg-white/[0.02] p-1 rounded-xl border border-white/[0.04]">
+      <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1.5 mb-4 bg-white/[0.02] p-1.5 rounded-xl border border-white/[0.04]">
         {[
           { id: 'jobs', label: 'Jobs', icon: Briefcase, color: 'text-cyan-400', activeBg: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
           { id: 'education', label: 'Study', icon: GraduationCap, color: 'text-purple-400', activeBg: 'bg-purple-500/15 text-purple-300 border-purple-500/20' },
@@ -202,13 +202,13 @@ export default function CareerScreen() {
             <button
               key={t.id}
               onClick={() => setTab(t.id as any)}
-              className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-semibold transition-all border ${
+              className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg text-sm font-bold transition-all border cursor-pointer ${
                 isActive 
                   ? t.activeBg 
                   : 'bg-transparent text-gray-500 border-transparent hover:text-gray-300'
               }`}
             >
-              <Icon className={`w-4 h-4 mb-0.5 ${isActive ? t.color : 'text-gray-500'}`} />
+              <Icon className={`w-4 h-4 mb-1 ${isActive ? t.color : 'text-gray-500'}`} />
               {t.label}
             </button>
           );

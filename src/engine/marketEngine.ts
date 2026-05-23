@@ -235,3 +235,109 @@ export function determineMarketTrend(
   if (avgChange < -0.03) return 'bear';
   return 'neutral';
 }
+
+/**
+ * Simulate one day of price fluctuations for all assets
+ */
+export function updateMarketDaily(
+  companies: Company[],
+  cryptoAssets: CryptoAsset[],
+  commodities: any[],
+  forexPairs: any[],
+  volatilityIndex: number,
+  stockMultiplier: number = 1,
+  sectorMultipliers: Partial<Record<StockSector, number>> = {},
+  marketTrend: 'bull' | 'bear' | 'neutral' = 'neutral'
+): {
+  companies: Company[];
+  cryptoAssets: CryptoAsset[];
+  commodities: any[];
+  forexPairs: any[];
+} {
+  const trendBonus =
+    marketTrend === 'bull' ? 0.0008 : marketTrend === 'bear' ? -0.0008 : 0;
+
+  const updatedCompanies = companies.map((company) => {
+    const sectorMult = sectorMultipliers[company.sector] || 1;
+    // Daily volatility is a fraction of monthly
+    const dailyVolatility = company.volatility / 10;
+    const randomChange = randomBetween(-dailyVolatility, dailyVolatility) * 0.06;
+    const growthChange = (company.growthTendency * 0.01) / 30;
+
+    const totalChange = (randomChange + growthChange + trendBonus) * stockMultiplier * sectorMult;
+
+    const newPrice = clamp(
+      company.currentPrice * (1 + totalChange),
+      company.basePrice * 0.05,
+      company.basePrice * 30
+    );
+
+    const newHistory = [...company.priceHistory, newPrice].slice(-60);
+
+    return {
+      ...company,
+      currentPrice: Math.round(newPrice * 100) / 100,
+      priceHistory: newHistory,
+    };
+  });
+
+  const updatedCryptos = cryptoAssets.map((crypto) => {
+    const cryptoMult = sectorMultipliers['crypto'] || 1;
+    const dailyVolatility = crypto.volatility / 10;
+    const randomChange = randomBetween(-dailyVolatility, dailyVolatility) * 0.12;
+    const totalChange = randomChange * stockMultiplier * cryptoMult;
+
+    const newPrice = clamp(
+      crypto.currentPrice * (1 + totalChange),
+      crypto.currentPrice * 0.2,
+      crypto.currentPrice * 5.0
+    );
+
+    const newHistory = [...crypto.priceHistory, newPrice].slice(-60);
+
+    return {
+      ...crypto,
+      currentPrice: Math.round(newPrice * 100) / 100,
+      priceHistory: newHistory,
+    };
+  });
+
+  const updatedCommodities = commodities.map((commodity) => {
+    const marketInverse = marketTrend === 'bear' ? 0.0003 : marketTrend === 'bull' ? -0.0003 : 0;
+    const dailyVolatility = 0.003;
+    const randomChange = randomBetween(-dailyVolatility, dailyVolatility) + marketInverse;
+
+    const newPrice = clamp(
+      commodity.pricePerUnit * (1 + randomChange),
+      commodity.pricePerUnit * 0.5,
+      commodity.pricePerUnit * 4.0
+    );
+
+    const newHistory = [...commodity.priceHistory, newPrice].slice(-60);
+
+    return {
+      ...commodity,
+      pricePerUnit: Math.round(newPrice * 100) / 100,
+      priceHistory: newHistory,
+    };
+  });
+
+  const updatedForex = forexPairs.map((pair) => {
+    const pipsChange = randomBetween(-pair.volatility, pair.volatility) * (volatilityIndex / 30) * 0.001;
+    const newRate = clamp(pair.currentRate + pipsChange, pair.baseRate * 0.8, pair.baseRate * 1.2);
+    const newHistory = [...pair.rateHistory, newRate].slice(-60);
+
+    return {
+      ...pair,
+      currentRate: Math.round(newRate * 10000) / 10000,
+      rateHistory: newHistory,
+    };
+  });
+
+  return {
+    companies: updatedCompanies,
+    cryptoAssets: updatedCryptos,
+    commodities: updatedCommodities,
+    forexPairs: updatedForex,
+  };
+}

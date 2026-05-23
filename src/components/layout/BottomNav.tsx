@@ -27,7 +27,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/90 backdrop-blur-xl border-t border-white/[0.06]">
-      <div className="max-w-[480px] mx-auto flex items-center justify-around px-1 py-1">
+      <div className="max-w-[480px] mx-auto flex items-center justify-around px-2 py-2">
         {tabs.map((tab) => {
           const isActive = currentScreen === tab.id;
           const Icon = tab.icon;
@@ -37,9 +37,9 @@ export default function BottomNav() {
               key={tab.id}
               onClick={() => setScreen(tab.id)}
               className={`
-                flex flex-col items-center justify-center py-2 px-2.5 rounded-xl
-                transition-colors duration-200 relative min-w-[52px]
-                ${isActive ? 'text-emerald-400' : 'text-gray-500 hover:text-gray-300'}
+                flex flex-col items-center justify-center py-2 px-3 rounded-xl
+                transition-colors duration-200 relative min-w-[56px]
+                ${isActive ? 'text-emerald-400 font-bold' : 'text-gray-500 hover:text-gray-300'}
               `}
               whileTap={{ scale: 0.9 }}
             >
@@ -50,8 +50,8 @@ export default function BottomNav() {
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
-              <Icon className="w-5 h-5 relative z-10" strokeWidth={isActive ? 2.5 : 1.5} />
-              <span className={`text-[10px] mt-0.5 relative z-10 ${isActive ? 'font-semibold' : 'font-normal'}`}>
+              <Icon className="w-5.5 h-5.5 relative z-10" strokeWidth={isActive ? 2.5 : 1.5} />
+              <span className={`text-xs mt-1 relative z-10 ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {tab.label}
               </span>
               {isActive && (

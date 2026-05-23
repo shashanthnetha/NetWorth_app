@@ -113,10 +113,10 @@ export default function BusinessScreen() {
   return (
     <motion.div className="page-container pb-24" variants={stagger} initial="hidden" animate="show">
       {/* Tab Selector */}
-      <motion.div variants={fadeUp} className="flex gap-2 p-1 bg-white/[0.02] border border-white/[0.05] rounded-xl mb-5">
+      <motion.div variants={fadeUp} className="flex gap-2 p-1.5 bg-white/[0.02] border border-white/[0.05] rounded-xl mb-5">
         <button
           onClick={() => setSubTab('businesses')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+          className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 cursor-pointer ${
             currentSubTab === 'businesses'
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
               : 'text-gray-400 hover:text-gray-200 border border-transparent'
@@ -126,7 +126,7 @@ export default function BusinessScreen() {
         </button>
         <button
           onClick={() => setSubTab('startups')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+          className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 cursor-pointer ${
             currentSubTab === 'startups'
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
               : 'text-gray-400 hover:text-gray-200 border border-transparent'
@@ -136,7 +136,7 @@ export default function BusinessScreen() {
         </button>
         <button
           onClick={() => setSubTab('properties')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+          className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 cursor-pointer ${
             currentSubTab === 'properties'
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
               : 'text-gray-400 hover:text-gray-200 border border-transparent'
@@ -150,7 +150,7 @@ export default function BusinessScreen() {
       {currentSubTab === 'businesses' && (
         <>
           <motion.div variants={fadeUp} className="mb-4">
-            <h1 className="font-heading text-xl font-bold text-gray-200">Business Empire</h1>
+            <h1 className="font-heading text-2xl font-extrabold text-gray-100">Business Empire</h1>
             <p className="text-xs text-gray-500">Acquire and upgrade brick-and-mortar passive cash generators</p>
           </motion.div>
 
@@ -302,7 +302,7 @@ export default function BusinessScreen() {
       {currentSubTab === 'startups' && (
         <>
           <motion.div variants={fadeUp} className="mb-4">
-            <h1 className="font-heading text-xl font-bold text-gray-200">Venture Startups</h1>
+            <h1 className="font-heading text-2xl font-extrabold text-gray-100">Venture Startups</h1>
             <p className="text-xs text-gray-500">Found hyper-scalable, high-risk VC backed companies</p>
           </motion.div>
 
@@ -548,7 +548,7 @@ export default function BusinessScreen() {
       {currentSubTab === 'properties' && (
         <>
           <motion.div variants={fadeUp} className="mb-4">
-            <h1 className="font-heading text-xl font-bold text-gray-200">Real Estate Empire</h1>
+            <h1 className="font-heading text-2xl font-extrabold text-gray-100">Real Estate Empire</h1>
             <p className="text-xs text-gray-500">Lease residential homes or acquire massive commercial office spaces</p>
           </motion.div>
 
