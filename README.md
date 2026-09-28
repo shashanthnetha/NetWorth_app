@@ -178,5 +178,4 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ---
 
-## 💳 License
-Distributed under the MIT License. See `LICENSE` for more information.
+
